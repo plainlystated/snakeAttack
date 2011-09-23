@@ -6,8 +6,8 @@ Copyright Patrick Schless, 2011
 
 
 // HL1606strip is an adaptation of LEDstrip from  http://code.google.com/p/ledstrip/
-#include <Snake.h>
-#include <Grid.h>
+#include "Snake.h"
+#include <HL1606grid.h>
 #include <Pixel.h>
 #include <HL1606strip.h>
 
@@ -24,7 +24,7 @@ Copyright Patrick Schless, 2011
 // of chips/LEDs per meter varies so make sure to count them! if you have the wrong number
 // the strip will act a little strangely, with the end pixels not showing up the way you like
 HL1606strip strip = HL1606strip(STRIP_D, STRIP_L, STRIP_C, 64);
-Grid grid = Grid(&strip);
+HL1606grid grid = HL1606grid(&strip);
 
 uint8_t lastInputState;
 uint8_t lastInputTime;
