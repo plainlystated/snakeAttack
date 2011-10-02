@@ -7,6 +7,7 @@ Copyright Patrick Schless, 2011
 
 // HL1606strip is an adaptation of LEDstrip from  http://code.google.com/p/ledstrip/
 #include "Snake.h"
+#include "Orchard.h"
 #include <Wire.h>
 #include "nunchuck_funcs.h"
 #include <HL1606grid.h>
@@ -27,6 +28,7 @@ Copyright Patrick Schless, 2011
 // the strip will act a little strangely, with the end pixels not showing up the way you like
 HL1606strip strip = HL1606strip(STRIP_D, STRIP_L, STRIP_C, 64);
 HL1606grid grid = HL1606grid(&strip);
+Orchard orchard = Orchard(&grid);
 
 uint8_t lastInputState;
 uint8_t lastInputTime;
@@ -81,7 +83,6 @@ void snakeGrid() {
   uint8_t duration = 100;
 
   Pixel *apples[3];
-  uint8_t appleCount = 0;
 
   Snake snake = Snake(&grid);
 
@@ -99,43 +100,11 @@ void snakeGrid() {
       grid.setLEDcolor(snake.pixels[snakeLED]->row, snake.pixels[snakeLED]->col, RED);
     }
 
-    if (appleCount < 3 && random(15) == 0) {
-      uint8_t attempts = 0;
-      while (attempts < 2) {
-        uint8_t c = random(grid.cols);
-        c = random(grid.cols);
-        c = random(grid.cols);
-        uint8_t r = random(grid.rows);
-        r = random(grid.rows);
-        r = random(grid.rows);
-        if (grid.getLEDcolor(r, c) == BLACK) {
-          
-          Serial.print("setRandomPixel ok @ [");
-          apples[appleCount] = &Pixel(r, c);
-          apples[appleCount]->marker = random(15) + 15;;
-          appleCount++;
-          break;
-        } else {
-          Serial.print("setRandomPixel collision @ [");
-          attempts += 1;
-        }
-      }
+    if (orchard.size < 3 && random(15) == 0) {
+      orchard.grow();
     }
 
-    for (uint8_t i=0; i<appleCount; i++) {
-      if (apples[i]->marker > 0) {
-        if (--(apples[i]->marker) == 0) {
-          grid.setLEDcolor(apples[i]->row, apples[i]->col, BLACK);
-          for (uint8_t j=i; j<appleCount; j++) {
-            apples[j] = apples[j+1];
-          }
-          i--;
-          appleCount--;
-        } else {
-          grid.setLEDcolor(apples[i]->row, apples[i]->col, GREEN);
-        }
-      }
-    }
+    orchard.draw();
 
     grid.writeGrid();
     delay(duration);
@@ -144,17 +113,15 @@ void snakeGrid() {
       grid.fill(BLUE);
       grid.writeGrid();
       delay(1000);
-      for (uint8_t i=0; i<3; i++) {
-        apples[i]->marker = 0;
-      }
-      appleCount = 0;
       grid.clear();
+      orchard = Orchard(&grid);
       snake = Snake(&grid);
       direction = 0;
       duration = 100;
     }
 
     if (movement == 1) {
+      orchard.prune(snake.pixels[0]);
       duration += 1;
       if (duration > 250) duration = 250;
     }
