@@ -32,6 +32,7 @@ Orchard orchard = Orchard(&grid);
 
 uint8_t lastInputState;
 uint8_t lastInputTime;
+boolean inputProcessed;
 
 uint8_t blockPosition = 0;
 int joystick_x;
@@ -45,6 +46,7 @@ void setup(void) {
 
   lastInputState = NO_INPUT;
   lastInputTime = 0;
+  inputProcessed = true;
 }
 
 void loop() {
@@ -55,11 +57,10 @@ void loop() {
 
 uint8_t getInput() {
   uint8_t input;
+  if (! inputProcessed) return lastInputState;
 
   nunchuck_get_data();
   joystick_x = nunchuck_joyx(); 
-Serial.print("joyx: ");
-Serial.println(joystick_x, DEC);
   if (joystick_x > 200) {
     input = RIGHT_PADDLE;
   } else if (joystick_x < 50) {
@@ -69,6 +70,7 @@ Serial.println(joystick_x, DEC);
   }
 
   if (input != lastInputState) {
+    inputProcessed = false;
     lastInputState = input;
     return input;
   } else {
@@ -80,7 +82,8 @@ void snakeGrid() {
   uint8_t row = 0;
   uint8_t direction = 0;
   uint8_t input;
-  uint8_t duration = 100;
+  uint16_t duration = 50;
+  uint16_t inputCounter = 0;
 
   Pixel *apples[3];
 
@@ -88,26 +91,25 @@ void snakeGrid() {
 
   while (true) {
     input = getInput();
+    if (inputCounter++ < duration) {
+      delay(1);
+      continue;
+    }
+    inputCounter = 0;
+
     if (input == RIGHT_PADDLE) direction = (direction + 1) % 4;
     if (input == LEFT_PADDLE) direction = (direction + 3) % 4;
+    inputProcessed = true;
 
-    for (uint8_t snakeLED=0; snakeLED<snake.size; snakeLED++) {
-      Serial.print("(");
-      Serial.print(snake.pixels[snakeLED]->row, 10);
-      Serial.print(",");
-      Serial.print(snake.pixels[snakeLED]->col, 10);
-      Serial.println(")");
-      grid.setLEDcolor(snake.pixels[snakeLED]->row, snake.pixels[snakeLED]->col, RED);
-    }
+    snake.draw();
 
     if (orchard.size < 3 && random(15) == 0) {
       orchard.grow();
     }
-
     orchard.draw();
 
     grid.writeGrid();
-    delay(duration);
+    delay(1);
     uint8_t movement = snake.move(direction);
     if (movement == 0) {
       grid.fill(BLUE);

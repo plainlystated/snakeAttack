@@ -127,3 +127,9 @@ bool Snake::moveRight() {
 bool Snake::moveLeft() {
   return move(3);
 }
+
+void Snake::draw() {
+  for (uint8_t i=0; i<size; i++) {
+    grid->setLEDcolor(pixels[i]->row, pixels[i]->col, RED);
+  }
+}

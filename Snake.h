@@ -23,6 +23,8 @@ class Snake {
     bool moveLeft();
     uint8_t size;
 
+    void draw();
+
   private:
     void promoteBody();
     Pixel* allocatePixel(uint8_t row, uint8_t col);
