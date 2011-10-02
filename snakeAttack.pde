@@ -7,6 +7,8 @@ Copyright Patrick Schless, 2011
 
 // HL1606strip is an adaptation of LEDstrip from  http://code.google.com/p/ledstrip/
 #include "Snake.h"
+#include <Wire.h>
+#include "nunchuck_funcs.h"
 #include <HL1606grid.h>
 #include <Pixel.h>
 #include <HL1606strip.h>
@@ -30,15 +32,14 @@ uint8_t lastInputState;
 uint8_t lastInputTime;
 
 uint8_t blockPosition = 0;
+int joystick_x;
 
 void setup(void) {
   Serial.begin(9600);
   randomSeed(analogRead(0));
-  pinMode(RIGHT_PADDLE, INPUT);
-  digitalWrite(RIGHT_PADDLE, HIGH);
 
-  pinMode(LEFT_PADDLE, INPUT);
-  digitalWrite(LEFT_PADDLE, HIGH);
+  nunchuck_setpowerpins();
+  nunchuck_init();
 
   lastInputState = NO_INPUT;
   lastInputTime = 0;
@@ -52,9 +53,14 @@ void loop() {
 
 uint8_t getInput() {
   uint8_t input;
-  if (digitalRead(RIGHT_PADDLE) == LOW) {
+
+  nunchuck_get_data();
+  joystick_x = nunchuck_joyx(); 
+Serial.print("joyx: ");
+Serial.println(joystick_x, DEC);
+  if (joystick_x > 200) {
     input = RIGHT_PADDLE;
-  } else if (digitalRead(LEFT_PADDLE) == LOW) {
+  } else if (joystick_x < 50) {
     input = LEFT_PADDLE;
   } else {
     input = NO_INPUT;
